@@ -1,0 +1,207 @@
+@font-face {
+  font-family: "CfOneTwoTrees";
+  src: url(../font/CfOneTwoTreesRegular-4LGp.ttf);
+}
+
+/* Box Model Hack */
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  --c-textBackground: #fbb94f;
+  --c-colorBackground: #532e05;
+  --c-white: #fff;
+}
+
+/* Clear fix hack */
+.clearfix:after {
+  content: ".";
+  display: block;
+  clear: both;
+  visibility: hidden;
+  line-height: 0;
+  height: 0;
+}
+
+.clear {
+  clear: both;
+}
+
+/******************************************
+/* BASE STYLES
+/*******************************************/
+
+html {
+  font-size: 62.5%;
+  background-color: #532e05;
+  min-width: 310px;
+}
+
+body {
+  background-image: url(../images/Bar-edgar-chaparro-unsplash-desktop.jpg);
+  background-repeat: no-repeat;
+  background-size: cover;
+  height: 100vh;
+  width: 100vw;
+}
+
+/******************************************
+/* LAYOUT
+/*******************************************/
+header {
+  display: flex;
+  justify-content: space-between;
+  height: 50px;
+  align-items: center;
+  margin: 10px;
+}
+
+.logo,
+.cocktail-name {
+  text-align: center;
+  font-size: 4rem;
+  font-family: "CfOneTwoTrees", serif;
+}
+
+.logo {
+  color: var(--c-textBackground);
+  width: 100px;
+  display: inline-block;
+  left: 0;
+  top: 16px;
+  justify-self: baseline;
+  position: relative;
+}
+nav {
+  display: flex;
+  justify-content: flex-end;
+  flex-grow: 1;
+}
+
+.nameSearch {
+  display: flex;
+}
+input,
+button {
+  height: 35px;
+  border: 2px solid var(--c-textBackground);
+  background: var(--c-colorBackground);
+  color: var(--c-textBackground);
+  caret-color: var(--c-textBackground);
+}
+
+button {
+  width: 30px;
+  margin-right: 30px;
+  position: relative;
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+
+.ingredientSearch {
+  display: flex;
+  margin-right: 33px;
+}
+
+.nameSearch,
+.ingredientSearch {
+  margin: 3px;
+  width: 100%;
+  flex-grow: 1;
+}
+
+#ingredientSearch {
+  flex-grow: 1;
+  max-width: 569px;
+  border-radius: 10px;
+  margin-right: 30px;
+}
+
+#nameSearch {
+  flex-grow: 1;
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+}
+
+footer {
+}
+
+/******************************************
+/* ADDITIONAL STYLES
+/*******************************************/
+main,
+.application {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 30px 10px;
+}
+
+.application {
+  min-height: 280px;
+  max-width: 320px;
+  border-radius: 20px;
+  opacity: 1;
+  color: var(--c-white);
+  box-shadow: 0px 1px 1px 1px var(--c-textBackground);
+}
+
+main > section {
+  border-radius: 10px;
+}
+.cocktail-image {
+  width: 30%;
+  min-width: 280px;
+}
+
+.cocktail-image img {
+  width: 100%;
+  height: 100%;
+  border-radius: 15px;
+  box-shadow: -1px 2px 4px 5px var(--c-colorBackground);
+}
+
+.cocktail-name {
+  font-size: 4rem;
+  text-align: center;
+  margin: 5px;
+  line-height: 0;
+}
+
+.cocktail-description > * {
+  font-size: 3rem;
+}
+
+.cocktail-ingredients {
+  padding: 10px;
+  border-top-color: 2px solid var(--c-textBackground);
+  width: 100%;
+  text-align: center;
+  font-size: 1.8rem;
+}
+
+.cocktail-pagition ul {
+  display: flex;
+  justify-content: space-evenly;
+  width: 100%;
+  list-style: none;
+  text-align: center;
+  align-items: self-start;
+  margin: 0;
+  padding: 0;
+  font-size: 2rem;
+  min-width: 280px;
+}
+
+@media all and (max-width: 721px) {
+  nav {
+    display: flex;
+    justify-content: flex-start;
+    flex-grow: 1;
+    top: 20%;
+    position: relative;
+    flex-direction: column;
+  }
+}
