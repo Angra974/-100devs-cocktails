@@ -1,5 +1,6 @@
 // let the user see the last cocktail he saw
 let currentCocktail = localStorage.getItem("currentCocktail");
+let currentIngredient = localStorage.getItem("currentIngredient");
 // get a random cocktail when loading page
 let randomUrl = "https://www.thecocktaildb.com/api/json/v1/1/random.php";
 const NUM_COCKTAIL_PER_CAROUSEL = 10;
@@ -8,7 +9,8 @@ let localIngredientsList = localStorage.getItem("ingredientsList");
 let localIngredientsListOptions = localStorage.getItem(
   "ingredientsListOptions"
 );
-
+let numOfCocktailsLinks = 0;
+let numTotalCocktails = 0;
 function writeCocktails(cocktails) {
   Object.entries(cocktails).length === 1
     ? writeCocktail(cocktails[0])
@@ -17,13 +19,37 @@ function writeCocktails(cocktails) {
 }
 function writeCocktailsList(cocktails) {
   const paginationContainer = document.querySelector(".pagination");
+  let len = Object.entries(cocktails).length;
+  numTotalCocktails = len;
+  numOfCocktailsLinks = Math.floor(len / NUM_COCKTAIL_PER_CAROUSEL);
 
-  let numOfCocktailsLinks = Math.floor(
-    Object.entries(cocktails).length / NUM_COCKTAIL_PER_CAROUSEL
-  );
+  console.log("nombre de cocktails " + len);
+  len = len > 10 ? 10 : len;
+
+  // save this request in storage..
+
+  //  localStorage.setItem("cocktailsWithIngredient", cocktails);
+  // 0 0 : first eleemnt, first page
+  // localStorage.setItem("currentIn_CocktailsWithIngredient", "0,0");
+
+  let arrowLeft = document.querySelector("a.left");
+  let arrowRight = document.querySelector("a.right");
+
+  arrowLeft.dataset["id"] = len;
+  arrowRight.dataset["id"] = 1;
+
+  [arrowLeft, arrowRight].forEach((el) => {
+    el.addEventListener("click", (elem) => {
+      elem.preventDefault();
+      // get cocktail from storage based on it's key
+      getLocalCocktailWithIngredient(elem.target.dataset.id);
+    });
+  });
 
   if (numOfCocktailsLinks > 0) {
-    for (let i = 0; i < numOfCocktailsLinks; i++) {
+    // clear this before append new child
+    paginationContainer.textContent = "";
+    for (let i = 1; i < numOfCocktailsLinks + 1; i++) {
       const aLi = document.createElement("li");
       const aLink = document.createElement("a");
       aLink.textContent = i;
@@ -34,21 +60,68 @@ function writeCocktailsList(cocktails) {
       paginationContainer.appendChild(aLi);
     }
   }
+
+  let random = Math.floor(numOfCocktailsLinks * Math.random());
+  console.log("random : " + random);
+  writeCocktail(cocktails[random]);
 }
 
 function writeCocktail(cocktail) {
   let cocktailImage = document.querySelector(".cocktail-image");
   let cocktailName = document.querySelector(".cocktail-name > p");
-  let cocktailDescription = document.querySelector(".cocktail-description > p");
+  let cocktailDescription = document.querySelector(
+    ".cocktail-description > p.description"
+  );
   let cocktailIngredients = document.querySelector(".cocktail-ingredients");
   let cocktailTags = document.querySelector(".cocktail-tags");
   let cocktailIngredientsList = document.getElementById("ingredientDataList");
   // change image
   cocktailImage.innerHTML = `<img src="${cocktail.strDrinkThumb}" alt="${cocktail.strDrink}" />`;
   cocktailName.textContent = `${cocktail.strDrink}`;
-  cocktailDescription.textContent = `${cocktail.strInstructions}`;
+
+  if (cocktail.strInstructions === undefined && numTotalCocktails > 0) {
+    cocktailDescription.textContent = `${
+      cocktail.strInstructions ??
+      "You have " +
+        numTotalCocktails +
+        " cocktails with " +
+        localStorage.getItem("currentIngredient") +
+        "\n"
+    }`;
+    let cocktailFilter = document.querySelector(
+      ".cocktail-description > p.filter"
+    );
+
+    cocktailFilter.textContent = "";
+
+    let aLink = document.createElement("a");
+    aLink.id = "filterIngredient";
+    aLink.href = "";
+    aLink.title = `See all cocktails with ${localStorage.getItem(
+      "currentIngredient"
+    )}`;
+    aLink.dataset.id = localStorage.getItem("currentIngredient");
+    aLink.textContent = `Click to see all the cocktails with ${localStorage.getItem(
+      "currentIngredient"
+    )}`;
+
+    // Add the event listener
+    aLink.addEventListener("click", (el) => {
+      el.preventDefault();
+      fetchUrlData(
+        `https://www.thecocktaildb.com/api/json/v1/1/filter.php?i=${localStorage.getItem(
+          "currentIngredient"
+        )}`,
+        "filter-ingredient"
+      );
+    });
+
+    cocktailFilter.appendChild(aLink);
+  } else {
+    cocktailDescription.textContent = cocktail.strInstructions;
+  }
+
   getCocktailIngredients(cocktail).map((x) => {
-    // Created the button, give its classes and innerHTML
     const aLink = document.createElement("a");
     aLink.className = "";
     aLink.innerHTML = x;
@@ -56,10 +129,12 @@ function writeCocktail(cocktail) {
 
     // Add the event listener
     aLink.addEventListener("click", (el) => {
-      el.preventDefault;
+      el.preventDefault();
       fetchUrlData(
-        `https://www.thecocktaildb.com/api/json/v1/1/filter.php?i=${x}`
+        `https://www.thecocktaildb.com/api/json/v1/1/filter.php?i=${x}`,
+        "ingredient"
       );
+      localStorage.setItem("currentIngredient", x);
     });
 
     // Append the button to the created card
@@ -73,6 +148,11 @@ function writeCocktail(cocktail) {
   let ingredientListLinks = document.querySelectorAll("a.ingredientList");
 }
 
+/**
+ *
+ * @param {Object cocktail} cocktail a cocktail object to parse, create ingredient datalist in localstorage
+ * @returns array : list of ingredients in a cocktails
+ */
 function getCocktailIngredients(cocktail) {
   let ingredients = [];
   for (const [key, value] of Object.entries(cocktail)) {
@@ -93,17 +173,127 @@ function getCocktailIngredients(cocktail) {
   return ingredients;
 }
 
+/**
+ *
+ * @param {string} url url to fetch data form. If empty, will search for margarita cocktails
+ */
 function fetchUrlData(
-  url = "https://www.thecocktaildb.com/api/json/v1/1/search.php?s=margarita"
+  url = "https://www.thecocktaildb.com/api/json/v1/1/search.php?s=margarita",
+  type = "cocktail"
 ) {
   fetch(url)
     .then((response) => response.json())
     .then((data) => {
-      writeCocktails(data.drinks);
+      if (data.drinks !== undefined && data.drinks !== null) {
+        if (type === "cocktail") {
+          console.log(data.drinks);
+          writeCocktails(data.drinks);
+        } else if (type === "ingredient") {
+          writeCocktails(data.drinks);
+        } else if (type === "filter-ingredient") {
+          writeCocktailsWithIngredientFilter(data.drinks);
+        }
+      }
     })
     .catch((error) => {
       console.log(error);
     });
 }
 
-fetchUrlData(randomUrl);
+// get a random data only when page is loaded and not each time application link is activated
+if (localStorage.getItem("currentCocktail") !== "") {
+  console.log("205");
+  fetchUrlData(randomUrl, "cocktail");
+}
+
+function writeCocktailsWithIngredientFilter(cocktails) {
+  let htmlApp = document.querySelector(".application");
+  let progressBar = document.querySelector("progress");
+  let _ul = document.createElement("ul");
+  progressBar.hidden = false;
+  progressBar.max = Object.entries(cocktails).length;
+
+  for (const [key, value] of Object.entries(cocktails)) {
+    progressBar.value++;
+    let _li = document.createElement("li");
+    let _a = document.createElement("a");
+    let _img = document.createElement("img");
+
+    _a.href = "#";
+    _a.dataset.id = value.idDrink;
+    _a.className = "filter";
+    _a.title = value.strDrink;
+    _a.dataset.text = value.strDrink;
+
+    _img.src = value.strDrinkThumb;
+    _img.alt = value.strDrink;
+
+    _a.appendChild(_img);
+    _li.appendChild(_a);
+    _ul.appendChild(_a);
+  }
+
+  htmlApp.innerHTML = `<ul class="cocktail-selection">${_ul.innerHTML}</ul>`;
+
+  progressBar.ariaHidden = true;
+  progressBar.hidden = true;
+
+  Array.from(document.querySelectorAll(".filter")).forEach((el) =>
+    el.addEventListener(
+      "click",
+      () => {
+        fetchUrlData(
+          `https://www.thecocktaildb.com/api/json/v1/1/search.php?s=${el.dataset.text}`,
+          "cocktail"
+        );
+
+        restoreAppHtml();
+      },
+      true
+    )
+  );
+}
+
+function getLocalCocktailWithIngredient(cocktail_id) {
+  /* to change to database later, won't work with localStorage here
+  writeCocktail(
+    Object.entries(localStorage.getItem("cocktailsWithIngredient"))[cocktail_id]
+  );
+  */
+  console.log("with id 1 :" + cocktail_id);
+  fetchUrlData(randomUrl, "cocktail");
+  console.log("with id 2 :" + cocktail_id);
+}
+
+function restoreAppHtml() {
+  const app = document.querySelector(".application");
+  app.innerHTML = `
+          <section class="cocktail-image">
+          <img
+            class="cocktailImage"
+            src="assets/images/finn-hackshaw-FQgI8AD-BSg-unsplash-200.png"
+            alt="cocktail name"
+          />
+        </section>
+        <section class="cocktail-name">
+          <p></p>
+        </section>
+        <section class="cocktail-description">
+          <p class="description"></p>
+          <p class="filter"></p>
+        </section>
+        <section class="cocktail-ingredients"></section>
+        <section class="cocktail-tags"></section>
+`;
+}
+
+document.getElementById("submit").addEventListener("click", (el) => {
+  el.preventDefault();
+  let cocktail = document.getElementById("nameSearch").value;
+  if (cocktail !== null && cocktail !== undefined) {
+    fetchUrlData(
+      "https://www.thecocktaildb.com/api/json/v1/1/search.php?s=" + cocktail,
+      "cocktail"
+    );
+  }
+});

@@ -27,9 +27,10 @@
             type="search"
             name="nameSearch"
             id="nameSearch"
+            value=""
             placeholder="Search for a cocktail"
           />
-          <button type="submit" name="submitNameSearch">S</button>
+          <button type="submit" name="submitNameSearch" id="submit">S</button>
         </div>
         <div class="ingredientSearch">
           <label for="ingredientSearch" hidden>Search</label>
@@ -51,24 +52,56 @@
       </nav>
     </header>
     <main>
+      <div class="arrow">
+        <a class="left" data-id="">&#x21a9;</a
+        ><progress
+          min="0"
+          max=""
+          value="0"
+          aria-hidden="true"
+          hidden="true"
+        ></progress>
+        <a class="right" data-id="">&#x21aa;</a>
+      </div>
       <div class="application">
         <section class="cocktail-image">
           <img
             class="cocktailImage"
-            src="assets/images/loezxn1504373874.jpg"
+            src="assets/images/finn-hackshaw-FQgI8AD-BSg-unsplash-200.png"
             alt="cocktail name"
           />
         </section>
         <section class="cocktail-name">
-          <span class="dir-left"></span>
           <p></p>
-          <span class="dir-right"></span>
         </section>
         <section class="cocktail-description">
-          <p></p>
+          <p class="description"></p>
+          <p class="filter"></p>
         </section>
         <section class="cocktail-ingredients"></section>
         <section class="cocktail-tags"></section>
+      </div>
+      <div class="alcohol">
+        <form action="">
+          <div class="left">
+            <input
+              type="checkbox"
+              name="cocktail-alcohol"
+              id="cocktail-alcohol"
+              checked="checked"
+            />
+            <label for="cocktail-alcohol">alcohol</label>
+          </div>
+          <div class="right">
+            <label for="cocktail-noalcohol">No alcohol</label>
+            <input
+              type="checkbox"
+              name="cocktail-noalcohol"
+              id="cocktail-noalcohol"
+              checked="checked"
+            />
+          </div>
+        </form>
       </div>
     </main>
     <footer id="footer">
