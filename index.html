@@ -29,10 +29,26 @@
             name="nameSearch"
             id="nameSearch"
             value=""
-            placeholder="Search for a cocktail"
+            placeholder="Search by name or ingredients"
           />
           <button type="submit" name="submitNameSearch" id="submit">S</button>
         </div>
+                <div class="nameSearch">
+          <select name="filtered-list" id="filtered-list">
+          <option value="" disabled></option>
+<option value="Ordinary_Drink">Ordinary Drink (Category)</option>
+<option value="Cocktail">Cocktail (Category)</option>
+<option value="Cocktail_glass">Cocktail glass</option>
+<option value="Champagne_flute">Champagne flute</option>
+
+<option value="Ingredients">Ingredients</option>
+<option value="Alcoholic">Alcoholic</option>
+<option value="Non_Alcoholic">Non Alcoholic</option>
+<option value="alcoholic">Alcoholic</option>
+          </select>
+          <button type="submit" name="submitFilterSearch" id="submitFilterSearch" id="submit">F</button>
+        </div>
+        <!--
         <div class="ingredientSearch">
           <label for="ingredientSearch" hidden>Search</label>
           <input
@@ -47,9 +63,10 @@
             <option value="Vodka">Vodka</option>
             <option value="Salt">Salt</option>
             <option value="Ice">Ice</option>
-            <!-- etc -->
           </datalist>
+
         </div>
+        -->
       </nav>
     </header>
     <main>
@@ -65,6 +82,7 @@ Don't Worry</span>        <a class="left" data-id="">&#x21a9;</a
         <a href="#" id="randomize">?</a>
         <a class="right" data-id="">&#x21aa;</a><span class="happy">Drink Happy</span>
       </div>
+        <section class="filter_results"></section>
       <div class="application">
         <section class="alcoholik">
           <span class="alcohol" data-text=""><a class="alcohol-filter" href="#" data-text="Filter by Alcohol" title="Clic to filter by Alchool">Welcome</a></span>

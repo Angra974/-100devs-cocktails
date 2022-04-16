@@ -82,6 +82,7 @@ nav {
 .nameSearch {
   display: flex;
 }
+#filtered-list,
 input,
 button {
   height: 35px;
@@ -91,6 +92,9 @@ button {
   caret-color: var(--c-textBackground);
 }
 
+#filtered-list option:first {
+  color: var(--c-textBackground);
+}
 button {
   width: 30px;
   margin-right: 30px;
@@ -126,11 +130,12 @@ button {
 
 #ingredientSearch {
   flex-grow: 1;
-  max-width: 569px;
   border-radius: 10px;
   margin-right: 30px;
 }
-
+#filtered-list {
+  flex-grow: 1;
+}
 #nameSearch {
   flex-grow: 1;
   border-top-left-radius: 10px;
@@ -438,4 +443,9 @@ form {
 
 .worry {
   left: 100px;
+}
+
+.filter_results {
+  font-size: 3rem;
+  color: var(--c-textBackground);
 }

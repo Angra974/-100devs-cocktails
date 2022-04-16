@@ -2,8 +2,10 @@
 let currentCocktail = localStorage.getItem("currentCocktail");
 let currentIngredient = localStorage.getItem("currentIngredient");
 // get a random cocktail when loading page
-let randomUrl = "https://www.thecocktaildb.com/api/json/v1/1/random.php";
+
 const NUM_COCKTAIL_PER_CAROUSEL = 10;
+const BASE_API_URL = "https://www.thecocktaildb.com/api/json/v1/1";
+const randomUrl = `${BASE_API_URL}/random.php`;
 // create 2 localStorage data for ingredients
 let localIngredientsList = localStorage.getItem("ingredientsList");
 let localIngredientsListOptions = localStorage.getItem(
@@ -117,7 +119,7 @@ function writeCocktail(cocktail) {
     aLink.addEventListener("click", (el) => {
       el.preventDefault();
       fetchUrlData(
-        `https://www.thecocktaildb.com/api/json/v1/1/filter.php?i=${localStorage.getItem(
+        `${BASE_API_URL}/filter.php?i=${localStorage.getItem(
           "currentIngredient"
         )}`,
         "filter-ingredient"
@@ -138,10 +140,7 @@ function writeCocktail(cocktail) {
     // Add the event listener
     aLink.addEventListener("click", (el) => {
       el.preventDefault();
-      fetchUrlData(
-        `https://www.thecocktaildb.com/api/json/v1/1/filter.php?i=${x}`,
-        "ingredient"
-      );
+      fetchUrlData(`${BASE_API_URL}/filter.php?i=${x}`, "ingredient");
       localStorage.setItem("currentIngredient", x);
     });
 
@@ -179,7 +178,7 @@ function writeCocktail(cocktail) {
       if (el.target.dataset.text !== "") {
         restoreAppHtml();
         // Add the event listener
-        let url = `https://www.thecocktaildb.com/api/json/v1/1/search.php?s=${el.target.dataset.text}`;
+        let url = `${BASE_API_URL}/search.php?s=${el.target.dataset.text}`;
         fetchUrlData(url, "cocktail");
       }
     });
@@ -241,7 +240,7 @@ function getCocktailIngredients(cocktail) {
  * @param {string} url url to fetch data form. If empty, will search for margarita cocktails
  */
 function fetchUrlData(
-  url = "https://www.thecocktaildb.com/api/json/v1/1/search.php?s=margarita",
+  url = `${BASE_API_URL}/search.php?s=margarita`,
   type = "cocktail"
 ) {
   fetch(url)
@@ -260,6 +259,13 @@ function fetchUrlData(
     })
     .catch((error) => {
       console.log(error);
+      // if a search is present, error will be certainly here
+      if (localStorage.getItem("currentFilteredSearch")) {
+        document.querySelector(".filter_results").textContent =
+          "No results for this search";
+        // clear it, so this error will not be associate with this value
+        localStorage.setItem("currentFilteredSearch", "");
+      }
     });
 }
 
@@ -278,6 +284,7 @@ function writeCocktailsWithIngredientFilter(cocktails) {
   let carouselStart = "";
   let iterator = 0;
   let _div = document.createElement("div");
+
   for (const [key, value] of Object.entries(cocktails)) {
     if (iterator === 0) {
       let _p = document.createElement("p");
@@ -340,7 +347,7 @@ function writeCocktailsWithIngredientFilter(cocktails) {
         document.querySelector(".details").dataset.text = el.title;
         /*
         fetchUrlData(
-          `https://www.thecocktaildb.com/api/json/v1/1/search.php?s=${el.dataset.text}`,
+          `${BASE_API_URL}/search.php?s=${el.dataset.text}`,
           "cocktail"
         );
         */
@@ -362,10 +369,16 @@ function writeCocktailsWithIngredientFilter(cocktails) {
     if (el.target.dataset.text !== "") {
       restoreAppHtml();
       // Add the event listener
-      let url = `https://www.thecocktaildb.com/api/json/v1/1/search.php?s=${el.target.dataset.text}`;
+      let url = `${BASE_API_URL}/search.php?s=${el.target.dataset.text}`;
       fetchUrlData(url, "cocktail");
     }
   });
+
+  // show filtered results information if present and clear it just after
+  document.querySelector(".filter_results").textContent = localStorage.getItem(
+    "currentFilteredSearch"
+  );
+  localStorage.setItem("currentFilteredSearch", ``);
 }
 
 function getLocalCocktailWithIngredient(cocktail_id) {
@@ -374,9 +387,7 @@ function getLocalCocktailWithIngredient(cocktail_id) {
     Object.entries(localStorage.getItem("cocktailsWithIngredient"))[cocktail_id]
   );
   */
-  console.log("with id 1 :" + cocktail_id);
   fetchUrlData(randomUrl, "cocktail");
-  console.log("with id 2 :" + cocktail_id);
 }
 
 function restoreAppHtml() {
@@ -411,23 +422,73 @@ document.querySelector(".alcohol-filter").addEventListener("click", (el) => {
     let filter = el.target.textContent.includes(" ")
       ? "Non_Alcoholic"
       : "Alcoholic";
-    fetchUrlData(
-      "https://www.thecocktaildb.com/api/json/v1/1/filter.php?a=" + filter,
-      "filter-ingredient"
-    );
+    fetchUrlData(`${BASE_API_URL}/filter.php?a=${filter}`, "filter-ingredient");
   }
 });
 
 document.getElementById("submit").addEventListener("click", (el) => {
   el.preventDefault();
   let cocktail = document.getElementById("nameSearch").value;
+  let filtered = document.getElementById("filtered-list").value;
+
+  // if filter is on ingredients and a search by name is done
+  // we look for all drink with this ingredient
+  // we perform a name search for the other case
+  let toBeFetched =
+    filtered === "Ingredients"
+      ? `filter.php?i=${cocktail}`
+      : `search.php?s=${cocktail}`;
   if (cocktail !== null && cocktail !== undefined) {
-    fetchUrlData(
-      "https://www.thecocktaildb.com/api/json/v1/1/search.php?s=" + cocktail,
-      "filter-ingredient"
+    fetchUrlData(`${BASE_API_URL}\\${toBeFetched}`, "filter-ingredient");
+
+    localStorage.setItem(
+      "currentFilteredSearch",
+      `${filtered.charAt(0).toLowerCase() + filtered.slice(1)} : ${
+        cocktail.charAt(0).toLowerCase() + cocktail.slice(1)
+      }`
     );
   }
 });
+
+document
+  .getElementById("submitFilterSearch")
+  .addEventListener("click", (el) => {
+    el.preventDefault();
+    let filtered = document.getElementById("filtered-list").value;
+    let ingredientSearch = "";
+    if (filtered === "Ingredients") {
+      if (!document.getElementById("nameSearch").value) {
+        alert("You need to add an ingredient name in the search fiels");
+        return false;
+      }
+      ingredientSearch = document.getElementById("nameSearch").value;
+    }
+    // if filter is on ingredients and a search by name is done
+    // we look for all drink with this ingredient
+    // we perform a name search for the other case
+    let matches = {
+      Ordinary_Drink: "c=Ordinary_Drink",
+      Cocktail: "c=Cocktail",
+      Cocktail_glass: "g=Cocktail_glass",
+      Champagne_flute: "g=Champagne_flute",
+      Ingredients: "i=" + ingredientSearch,
+      Alcoholic: "a=Alcoholic",
+      Non_Alcoholic: "a=Non_Alcoholic",
+    };
+
+    fetchUrlData(
+      "https://www.thecocktaildb.com/api/json/v1/1/filter.php?" +
+        matches[filtered],
+      "filter-ingredient"
+    );
+
+    localStorage.setItem(
+      "currentFilteredSearch",
+      `Filter : ${filtered.charAt(0).toLowerCase() + filtered.slice(1)}  ${
+        ingredientSearch ?? ""
+      }`
+    );
+  });
 
 /* add event listener here */
 let arrowLeft = document.querySelector("a.left");
