@@ -73,6 +73,8 @@ function writeCocktail(cocktail) {
   let cocktailDescription = document.querySelector(
     ".cocktail-description > p.description"
   );
+  let alcohol = document.querySelector(".alcohol-filter");
+
   let cocktailIngredients = document.querySelector(".cocktail-ingredients");
   let cocktailTags = document.querySelector(".cocktail-tags");
   let cocktailIngredientsList = document.getElementById("ingredientDataList");
@@ -80,9 +82,10 @@ function writeCocktail(cocktail) {
   cocktailImage.innerHTML = `<img src="${cocktail.strDrinkThumb}" alt="${cocktail.strDrink}" />`;
   cocktailName.textContent = `${cocktail.strDrink}`;
 
-  // remove child if element has some
-  while (cocktailIngredients.hasChildNodes())
-    cocktailIngredients.removeChild(cocktailIngredients.firstChild);
+  // set with alcohol or not
+  alcohol.textContent = cocktail.strAlcoholic;
+
+  clearHtmlElement(cocktailIngredients);
 
   if (cocktail.strInstructions === undefined && numTotalCocktails > 0) {
     cocktailDescription.textContent = `${
@@ -147,7 +150,42 @@ function writeCocktail(cocktail) {
     cocktailIngredients.appendChild(aLink);
   });
 
-  cocktailTags.textContent = cocktail.strTags || "";
+  // deal with tags
+  // TODO : add a tags list/page so user can see all tags
+  // ? datalist can be put on main page
+  // ? Think of update on advanced search
+  clearHtmlElement(cocktailTags);
+  if (cocktail.strTags)
+    cocktail.strTags.split(",").forEach((elem) => {
+      let _a = document.createElement("a");
+      _a.className = "tag";
+      _a.dataset.text = elem;
+      _a.href = "#";
+      _a.title = "";
+      _a.textContent = "#" + elem;
+      cocktailTags.appendChild(_a);
+    });
+
+  // add event handler to all .tags links
+  Array.from(document.querySelectorAll(".tags")).forEach((el) => {
+    el.preventDefault();
+
+    // TODO : Add a databse engine and create a tag databse for making search available by tags
+    // * Allow research by multiple tags possible
+    /*
+    el.addEventListener("click", (el) => {
+      el.preventDefault();
+
+      if (el.target.dataset.text !== "") {
+        restoreAppHtml();
+        // Add the event listener
+        let url = `https://www.thecocktaildb.com/api/json/v1/1/search.php?s=${el.target.dataset.text}`;
+        fetchUrlData(url, "cocktail");
+      }
+    });
+    */
+  });
+
   //  cocktailIngredientsList.innerHTML = localIngredientsListOptions || "";
 
   /* default behavior */
@@ -227,7 +265,7 @@ function fetchUrlData(
 
 // get a random data only when page is loaded and not each time application link is activated
 if (localStorage.getItem("currentCocktail") !== "") {
-  console.log("205");
+  console.log("230");
   fetchUrlData(randomUrl, "cocktail");
 }
 
@@ -244,7 +282,6 @@ function writeCocktailsWithIngredientFilter(cocktails) {
     if (iterator === 0) {
       let _p = document.createElement("p");
       let _span1 = document.createElement("span");
-      let _span2 = document.createElement("span");
 
       let _a = document.createElement("a");
       let _img = document.createElement("img");
@@ -252,6 +289,7 @@ function writeCocktailsWithIngredientFilter(cocktails) {
       _div.id = "carousel";
       _p.className = "cocktail-name";
       _span1.textContent = value.strDrink;
+      _span1.className = "cname";
       _a.className = "details";
       _a.href = "";
       _a.title = "See details";
@@ -262,29 +300,28 @@ function writeCocktailsWithIngredientFilter(cocktails) {
       _img.al = value.strDrink;
 
       _p.appendChild(_span1);
-      _span2.appendChild(_a);
-      _p.appendChild(_span2);
+      _p.appendChild(_a);
       _div.appendChild(_p);
       _div.appendChild(_img);
     }
     progressBar.value++;
     let _li = document.createElement("li");
-    let _a = document.createElement("a");
+    let _aLink = document.createElement("a");
     let _img = document.createElement("img");
 
     _li.className = "items";
     _li.dataset.id = ++iterator;
-    _a.href = "#";
-    _a.dataset.id = value.idDrink;
-    _a.className = "filter";
-    _a.title = value.strDrink;
-    _a.dataset.text = value.strDrink;
+    _aLink.href = "#";
+    _aLink.dataset.id = value.idDrink;
+    _aLink.className = "filter";
+    _aLink.title = value.strDrink;
+    _aLink.dataset.text = value.strDrink;
 
     _img.src = value.strDrinkThumb;
     _img.alt = value.strDrink;
 
-    _a.appendChild(_img);
-    _li.appendChild(_a);
+    _aLink.appendChild(_img);
+    _li.appendChild(_aLink);
     _ul.appendChild(_li);
   }
 
@@ -299,7 +336,8 @@ function writeCocktailsWithIngredientFilter(cocktails) {
       () => {
         console.log(el.firstChild);
         document.getElementById("carouselImage").src = el.firstChild.src;
-        document.querySelector(".cocktail-name").textContent = el.title;
+        document.querySelector(".cname").textContent = el.title;
+        document.querySelector(".details").dataset.text = el.title;
         /*
         fetchUrlData(
           `https://www.thecocktaildb.com/api/json/v1/1/search.php?s=${el.dataset.text}`,
@@ -311,6 +349,23 @@ function writeCocktailsWithIngredientFilter(cocktails) {
       true
     )
   );
+
+  /**
+   * Add click event on details link
+   * for not generate the event each time filter view is requested
+   * an empty dataset text value is used as default. No functionnality
+   * is associate with default empty valye
+   */
+  document.querySelector(".details").addEventListener("click", (el) => {
+    el.preventDefault();
+    console.log(el);
+    if (el.target.dataset.text !== "") {
+      restoreAppHtml();
+      // Add the event listener
+      let url = `https://www.thecocktaildb.com/api/json/v1/1/search.php?s=${el.target.dataset.text}`;
+      fetchUrlData(url, "cocktail");
+    }
+  });
 }
 
 function getLocalCocktailWithIngredient(cocktail_id) {
@@ -327,12 +382,16 @@ function getLocalCocktailWithIngredient(cocktail_id) {
 function restoreAppHtml() {
   const app = document.querySelector(".application");
   app.innerHTML = `
-          <section class="cocktail-image">
+
+                <section class="alcoholik">
+              <span class="alcohol" data-text=""><a class="alcohol-filter" href="#" data-text="Filter by Alcohol" title="Clic to filter by Alchool">Welcome</a></span>
+    <div class="cocktail-image">
           <img
             class="cocktailImage"
             src="assets/images/finn-hackshaw-FQgI8AD-BSg-unsplash-200.png"
             alt="cocktail name"
           />
+        </div>
         </section>
         <section class="cocktail-name">
           <p></p>
@@ -346,13 +405,26 @@ function restoreAppHtml() {
 `;
 }
 
+document.querySelector(".alcohol-filter").addEventListener("click", (el) => {
+  el.preventDefault();
+  if (el.target.textContent !== "") {
+    let filter = el.target.textContent.includes(" ")
+      ? "Non_Alcoholic"
+      : "Alcoholic";
+    fetchUrlData(
+      "https://www.thecocktaildb.com/api/json/v1/1/filter.php?a=" + filter,
+      "filter-ingredient"
+    );
+  }
+});
+
 document.getElementById("submit").addEventListener("click", (el) => {
   el.preventDefault();
   let cocktail = document.getElementById("nameSearch").value;
   if (cocktail !== null && cocktail !== undefined) {
     fetchUrlData(
       "https://www.thecocktaildb.com/api/json/v1/1/search.php?s=" + cocktail,
-      "cocktail"
+      "filter-ingredient"
     );
   }
 });
@@ -380,3 +452,12 @@ randomize.addEventListener("click", (elem) => {
   // get cocktail from storage based on it's key
   getLocalCocktailWithIngredient(elem.target.dataset.id);
 });
+
+/**
+ * helper function
+ * clear an innerHtml content before update
+ * @param {Html element} el
+ */
+function clearHtmlElement(el) {
+  while (el.hasChildNodes()) el.removeChild(el.firstChild);
+}

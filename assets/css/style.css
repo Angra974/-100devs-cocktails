@@ -168,9 +168,8 @@ main > section {
   border-radius: 10px;
 }
 .cocktail-image {
-  width: 30%;
-  min-width: 200px;
-  min-height: 202.5px;
+  min-width: 220px;
+  min-height: 220px;
 }
 
 img {
@@ -207,19 +206,6 @@ img {
   height: 80px;
 }
 
-#filterIngredient::after,
-.cocktail-name::after {
-  content: "";
-  background-color: var(--c-dark);
-  opacity: 1;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 0;
-  position: absolute;
-  z-index: -1;
-}
-
 .cocktail-description > * {
   font-size: 2rem;
   max-height: 150px;
@@ -241,15 +227,18 @@ p::selection {
   overflow: auto;
 }
 
+.cocktail-tags a,
 .cocktail-ingredients a {
   padding: 0 5px;
   border-radius: 3px;
 }
 
+.cocktail-tags a:not(:last-child),
 .cocktail-ingredients a:not(:last-child) {
   border-right: 1px solid var(--c-textBackground);
 }
 
+.cocktail-tags a:hover,
 .cocktail-ingredients a:hover {
   background-color: var(--c-textBackground);
   color: var(--c-colorBackground);
@@ -325,8 +314,7 @@ a::after {
 .application li {
   margin-bottom: 10px;
 }
-.application li,
-.application a {
+.application li {
   width: 60px;
   height: 60px;
 }
@@ -406,15 +394,48 @@ form {
   justify-content: flex-end;
 }
 
-.details {
+.details,
+.tag {
   font-size: 20px;
   color: var(--c-textBackground);
-  pointer-events: none;
 }
 
 #carousel {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 100%;
+}
+
+.alcohol {
+  font-size: 30px;
+  text-orientation: revert-layer;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  text-align: center;
+}
+
+.noalcohol {
+  background: url("/assets/icons/icons8-alcohol-64.png");
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+}
+
+.alcoholik {
+  display: flex;
+}
+
+.happy,
+.worry {
+  position: absolute;
+  font-size: 30px;
+  color: var(--c-textBackground);
+}
+
+.happy {
+  right: 100px;
+}
+
+.worry {
+  left: 100px;
 }
