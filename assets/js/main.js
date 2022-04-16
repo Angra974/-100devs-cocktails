@@ -12,6 +12,7 @@ let localIngredientsListOptions = localStorage.getItem(
 let numOfCocktailsLinks = 0;
 let numTotalCocktails = 0;
 function writeCocktails(cocktails) {
+  console.log("len 15 : " + Object.entries(cocktails).length);
   Object.entries(cocktails).length === 1
     ? writeCocktail(cocktails[0])
     : writeCocktailsList(cocktails);
@@ -38,14 +39,6 @@ function writeCocktailsList(cocktails) {
   arrowLeft.dataset["id"] = len;
   arrowRight.dataset["id"] = 1;
 
-  [arrowLeft, arrowRight].forEach((el) => {
-    el.addEventListener("click", (elem) => {
-      elem.preventDefault();
-      // get cocktail from storage based on it's key
-      getLocalCocktailWithIngredient(elem.target.dataset.id);
-    });
-  });
-
   if (numOfCocktailsLinks > 0) {
     // clear this before append new child
     paginationContainer.textContent = "";
@@ -66,7 +59,15 @@ function writeCocktailsList(cocktails) {
   writeCocktail(cocktails[random]);
 }
 
+/**
+ *
+ * @param {Cocktail object} cocktail
+ */
 function writeCocktail(cocktail) {
+  console.log("in cocktail =>");
+
+  console.log(cocktail);
+  console.log("<= end in cocktail");
   let cocktailImage = document.querySelector(".cocktail-image");
   let cocktailName = document.querySelector(".cocktail-name > p");
   let cocktailDescription = document.querySelector(
@@ -78,6 +79,10 @@ function writeCocktail(cocktail) {
   // change image
   cocktailImage.innerHTML = `<img src="${cocktail.strDrinkThumb}" alt="${cocktail.strDrink}" />`;
   cocktailName.textContent = `${cocktail.strDrink}`;
+
+  // remove child if element has some
+  while (cocktailIngredients.hasChildNodes())
+    cocktailIngredients.removeChild(cocktailIngredients.firstChild);
 
   if (cocktail.strInstructions === undefined && numTotalCocktails > 0) {
     cocktailDescription.textContent = `${
@@ -120,8 +125,8 @@ function writeCocktail(cocktail) {
   } else {
     cocktailDescription.textContent = cocktail.strInstructions;
   }
-
   getCocktailIngredients(cocktail).map((x) => {
+    console.log("cocktail ingredient here = " + x);
     const aLink = document.createElement("a");
     aLink.className = "";
     aLink.innerHTML = x;
@@ -138,6 +143,7 @@ function writeCocktail(cocktail) {
     });
 
     // Append the button to the created card
+    //   cocktailIngredients.textContent = "";
     cocktailIngredients.appendChild(aLink);
   });
 
@@ -155,18 +161,37 @@ function writeCocktail(cocktail) {
  */
 function getCocktailIngredients(cocktail) {
   let ingredients = [];
+
   for (const [key, value] of Object.entries(cocktail)) {
-    if (key.includes("strIngredient") && value) ingredients.push(value);
-    // if value is not in our global list of ingredients
-    if (
-      localIngredientsList &&
-      false === localIngredientsList.includes(value)
-    ) {
-      localIngredientsList.push(value);
-      // add new option so we just have to load it from localStorage instead a recreate it each time
-      localIngredientsListOptions.push(
-        `<option value="${value}">${value}</option>`
-      );
+    console.log(key, value);
+    if (key.includes("strIngredient") && value) {
+      ingredients.push(value);
+      // if no ingredient yet in localstorage
+      if (
+        localIngredientsList === null ||
+        false === localIngredientsList.includes(`"[${value}]`)
+      ) {
+        localIngredientsList =
+          localIngredientsList === null
+            ? ""
+            : localStorage.getItem("ingredientsList");
+        // don't forget localStorage accept only string
+        localStorage.setItem(
+          "ingredientsList",
+          localIngredientsList + ` [${value}] `
+        );
+
+        localIngredientsListOptions =
+          localIngredientsListOptions === null
+            ? ""
+            : localStorage.getItem("localIngredientsListOptions");
+        // don't forget localStorage accept only string
+        localStorage.setItem(
+          "ingredientsListOptions",
+          localIngredientsListOptions +
+            `<option vazlue="${value}">${value}</option>`
+        );
+      }
     }
   }
 
@@ -219,6 +244,7 @@ function writeCocktailsWithIngredientFilter(cocktails) {
     let _a = document.createElement("a");
     let _img = document.createElement("img");
 
+    _li.className = "items";
     _a.href = "#";
     _a.dataset.id = value.idDrink;
     _a.className = "filter";
@@ -230,7 +256,7 @@ function writeCocktailsWithIngredientFilter(cocktails) {
 
     _a.appendChild(_img);
     _li.appendChild(_a);
-    _ul.appendChild(_a);
+    _ul.appendChild(_li);
   }
 
   htmlApp.innerHTML = `<ul class="cocktail-selection">${_ul.innerHTML}</ul>`;
@@ -296,4 +322,27 @@ document.getElementById("submit").addEventListener("click", (el) => {
       "cocktail"
     );
   }
+});
+
+/* add event listener here */
+let arrowLeft = document.querySelector("a.left");
+let arrowRight = document.querySelector("a.right");
+
+[arrowLeft, arrowRight].forEach((el) => {
+  el.addEventListener("click", (elem) => {
+    elem.preventDefault;
+    console.log("click for ");
+    // get cocktail from storage based on it's key
+    getLocalCocktailWithIngredient(elem.target.dataset.id);
+  });
+});
+
+/* add event listener here */
+let randomize = document.getElementById("randomize");
+
+randomize.addEventListener("click", (elem) => {
+  elem.preventDefault;
+  console.log("click for ");
+  // get cocktail from storage based on it's key
+  getLocalCocktailWithIngredient(elem.target.dataset.id);
 });
