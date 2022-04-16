@@ -43,7 +43,6 @@ body {
   background-image: url(../images/Bar-edgar-chaparro-unsplash-desktop.jpg);
   background-repeat: no-repeat;
   background-size: cover;
-  height: 100vh;
   width: 100vw;
 }
 
@@ -223,6 +222,9 @@ img {
 
 .cocktail-description > * {
   font-size: 2rem;
+  max-height: 150px;
+  overflow-y: scroll;
+  overflow-x: hidden;
 }
 
 p::selection {
@@ -257,6 +259,15 @@ p::selection {
   width: 100%;
   display: flex;
   justify-content: center;
+}
+
+#randomize {
+  width: 25px;
+  height: 25px;
+  background: var(--c-textBackground);
+  text-align: center;
+  border: 1px solid var(--c-colorBackground);
+  border-radius: 50%;
 }
 
 .cocktail-pagition ul {
@@ -297,23 +308,19 @@ a::after {
 }
 
 .application ul {
-  display: flex;
   list-style: none;
   flex-wrap: wrap;
-  padding: z;
-  justify-content: space-between;
-  align-items: center;
 }
 
 .application ul,
 .cocktail-description {
-  height: 150px;
-  overflow-y: scroll;
-  overflow-x: hidden;
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
+}
+
+.cocktail-description {
+  flex-direction: column;
 }
 .application li {
   margin-bottom: 10px;
