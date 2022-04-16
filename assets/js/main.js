@@ -237,14 +237,43 @@ function writeCocktailsWithIngredientFilter(cocktails) {
   let _ul = document.createElement("ul");
   progressBar.hidden = false;
   progressBar.max = Object.entries(cocktails).length;
-
+  let carouselStart = "";
+  let iterator = 0;
+  let _div = document.createElement("div");
   for (const [key, value] of Object.entries(cocktails)) {
+    if (iterator === 0) {
+      let _p = document.createElement("p");
+      let _span1 = document.createElement("span");
+      let _span2 = document.createElement("span");
+
+      let _a = document.createElement("a");
+      let _img = document.createElement("img");
+
+      _div.id = "carousel";
+      _p.className = "cocktail-name";
+      _span1.textContent = value.strDrink;
+      _a.className = "details";
+      _a.href = "";
+      _a.title = "See details";
+      _a.dataset.text = value.strDrink;
+      _a.textContent = "See details";
+      _img.src = value.strDrinkThumb;
+      _img.id = "carouselImage";
+      _img.al = value.strDrink;
+
+      _p.appendChild(_span1);
+      _span2.appendChild(_a);
+      _p.appendChild(_span2);
+      _div.appendChild(_p);
+      _div.appendChild(_img);
+    }
     progressBar.value++;
     let _li = document.createElement("li");
     let _a = document.createElement("a");
     let _img = document.createElement("img");
 
     _li.className = "items";
+    _li.dataset.id = ++iterator;
     _a.href = "#";
     _a.dataset.id = value.idDrink;
     _a.className = "filter";
@@ -259,21 +288,25 @@ function writeCocktailsWithIngredientFilter(cocktails) {
     _ul.appendChild(_li);
   }
 
-  htmlApp.innerHTML = `<ul class="cocktail-selection">${_ul.innerHTML}</ul>`;
+  htmlApp.innerHTML = `${_div.outerHTML}<ul class="cocktail-selection">${_ul.innerHTML}</ul>`;
 
   progressBar.ariaHidden = true;
   progressBar.hidden = true;
 
-  Array.from(document.querySelectorAll(".filter")).forEach((el) =>
+  Array.from(document.querySelectorAll("a.filter")).forEach((el) =>
     el.addEventListener(
       "click",
       () => {
+        console.log(el.firstChild);
+        document.getElementById("carouselImage").src = el.firstChild.src;
+        document.querySelector(".cocktail-name").textContent = el.title;
+        /*
         fetchUrlData(
           `https://www.thecocktaildb.com/api/json/v1/1/search.php?s=${el.dataset.text}`,
           "cocktail"
         );
-
-        restoreAppHtml();
+        */
+        //        restoreAppHtml();
       },
       true
     )
@@ -342,7 +375,8 @@ let randomize = document.getElementById("randomize");
 
 randomize.addEventListener("click", (elem) => {
   elem.preventDefault;
-  console.log("click for ");
+  // initisalize base template first
+  restoreAppHtml();
   // get cocktail from storage based on it's key
   getLocalCocktailWithIngredient(elem.target.dataset.id);
 });

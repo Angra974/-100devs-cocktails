@@ -12,6 +12,7 @@
   --c-textBackground: #fbb94f;
   --c-colorBackground: #532e05;
   --c-white: #fff;
+  --c-dark: #000;
 }
 
 /* Clear fix hack */
@@ -149,12 +150,14 @@ main,
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 30px 10px;
+  width: 100%;
+  margin: -2%;
+  margin: 0;
+  padding: 20px;
 }
 
 .application {
   min-height: 540px;
-  max-width: 320px;
   border-radius: 20px;
   opacity: 1;
   color: var(--c-white);
@@ -176,15 +179,27 @@ img {
   height: 100%;
   border-radius: 15px;
   box-shadow: -1px 2px 4px 5px var(--c-colorBackground);
+  max-width: 220px;
+  max-height: 220px;
 }
 
+#filterIngredient {
+  font-size: 2rem;
+  padding: 0 10px;
+}
 .cocktail-name {
-  display: block;
-  position: relative;
   font-size: 4rem;
+}
+#filterIngredient,
+.cocktail-name {
+  border: 1px solid transparent;
+  display: flex;
+  position: relative;
+  justify-content: space-evenly;
+  align-items: center;
+  flex-direction: column;
   text-align: center;
   line-height: 0;
-  opacity: 1;
   width: 100%;
   margin: 10px;
   border-radius: 10px;
@@ -193,9 +208,10 @@ img {
   height: 80px;
 }
 
+#filterIngredient::after,
 .cocktail-name::after {
   content: "";
-  background-color: black;
+  background-color: var(--c-dark);
   opacity: 1;
   top: 0;
   left: 0;
@@ -289,6 +305,16 @@ a::after {
   align-items: center;
 }
 
+.application ul,
+.cocktail-description {
+  height: 150px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
 .application li {
   margin-bottom: 10px;
 }
@@ -298,17 +324,17 @@ a::after {
   height: 60px;
 }
 
-.filter {
+a.filter {
   position: relative; /* making the .filter span a container for the filter text */
   border-bottom: 1px dashed #000; /* little indicater to indicate it's hoverable */
 }
 
-.filter:before {
+a.filter:before {
   content: attr(data-text); /* here's the magic */
   position: absolute;
   opacity: 0.6;
   /* vertically center */
-  top: -100%;
+  top: -500%;
   transform: translateY(-100%);
 
   /* move to right */
@@ -371,4 +397,17 @@ form {
 
 .right {
   justify-content: flex-end;
+}
+
+.details {
+  font-size: 20px;
+  color: var(--c-textBackground);
+  pointer-events: none;
+}
+
+#carousel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
 }
