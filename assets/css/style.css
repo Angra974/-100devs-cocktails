@@ -342,7 +342,7 @@ a::after {
 .application li {
   margin-bottom: 10px;
 }
-.application li {
+.application li.items {
   width: 60px;
   height: 60px;
 }
@@ -463,6 +463,9 @@ form {
 .filter_results {
   font-size: 3rem;
   color: var(--c-textBackground);
+  background-color: var(--c-colorBackground);
+  padding: 5px 20px;
+  border-radius: 15px;
 }
 
 .blinky {
@@ -491,4 +494,22 @@ ul li.items {
 
 .items.active img {
   box-shadow: -1px 2px 4px 5px var(--c-textBackground);
+}
+
+.listing {
+  background: var(--c-colorBackground);
+  opacity: 0, 7;
+}
+
+a.list {
+  font-size: 2rem;
+}
+
+.application .list {
+  margin: 10px;
+}
+
+.upper {
+  background-color: var(--c-colorBackground);
+  color: var(--c-textBackground);
 }

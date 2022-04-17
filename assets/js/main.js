@@ -18,20 +18,29 @@ let numTotalCocktails = 0;
 const arrowLeft = document.querySelector("a.left");
 const arrowRight = document.querySelector("a.right");
 
+/**
+ * Write a cocktail details or a list of cocktails depending of how much dans is sent
+ * @param {Object coktail} cocktails
+ * @return void
+ */
 function writeCocktails(cocktails) {
-  console.log("len 15 : " + Object.entries(cocktails).length);
+  // Don't show filter everywhere, except on filter page after a search
+  localStorage.setItem("currentFilteredSearch", "");
+
+  // clear this value too
+  document.querySelector(".filter_results").textContent = "";
+
   Object.entries(cocktails).length === 1
     ? writeCocktail(cocktails[0])
     : writeCocktailsList(cocktails);
   //  cocktails.forEach((el) => writeCocktail(el));
 }
+
 function writeCocktailsList(cocktails) {
   const paginationContainer = document.querySelector(".pagination");
   let len = Object.entries(cocktails).length;
   numTotalCocktails = len;
   numOfCocktailsLinks = Math.floor(len / NUM_COCKTAIL_PER_CAROUSEL);
-
-  console.log("nombre de cocktails " + len);
   len = len > 10 ? 10 : len;
 
   // save this request in storage..
@@ -42,23 +51,7 @@ function writeCocktailsList(cocktails) {
   arrowLeft.dataset["id"] = len; // last element in the array
   arrowRight.dataset["id"] = 2; // next image after the first is the second
 
-  if (numOfCocktailsLinks > 0) {
-    // clear this before append new child
-    paginationContainer.textContent = "";
-    for (let i = 1; i < numOfCocktailsLinks + 1; i++) {
-      const aLi = document.createElement("li");
-      const aLink = document.createElement("a");
-      aLink.textContent = i;
-      aLink.href = "#";
-      aLink.className = "page";
-      aLink.dataset.title = i;
-      aLi.appendChild(aLink);
-      paginationContainer.appendChild(aLi);
-    }
-  }
-
   let random = Math.floor(numOfCocktailsLinks * Math.random());
-  console.log("random : " + random);
   writeCocktail(cocktails[random]);
 }
 
@@ -67,7 +60,6 @@ function writeCocktailsList(cocktails) {
  * @param {Cocktail object} cocktail
  */
 function writeCocktail(cocktail) {
-  console.log(cocktail);
   const cocktailImage = document.querySelector(".cocktail-image");
   const cocktailName = document.querySelector(".cocktail-name > p");
   const cocktailDescription = document.querySelector(
@@ -246,11 +238,12 @@ function fetchUrlData(
       if (data.drinks !== undefined && data.drinks !== null) {
         if (type === "cocktail" || type === "ingredient") {
           [arrowLeft, arrowRight].forEach((el) => (el.style.opacity = "0"));
-
           writeCocktails(data.drinks);
         } else if (type === "filter-ingredient") {
           writeCocktailsWithIngredientFilter(data.drinks);
           [arrowLeft, arrowRight].forEach((el) => (el.style.opacity = "1"));
+        } else if (type === "filter-list") {
+          writeFilters(data.drinks);
         }
       }
     })
@@ -270,6 +263,55 @@ if (localStorage.getItem("currentCocktail") !== "") {
   fetchUrlData(randomUrl, "cocktail");
 }
 
+function writeFilters(data) {
+  if (Object.entries(data).length > 0) {
+    let app = document.querySelector(".application");
+    clearHtmlElement(app);
+    let _ul = document.createElement("ul");
+    let dataList = Object.keys(data[0]);
+    for (const [key, value] of Object.entries(data)) {
+      let _li = document.createElement("li");
+      let _a = document.createElement("a");
+      let _span1 = document.createElement("span");
+      _a.className = "list";
+      _a.href = "#";
+      _a.dataset.list = dataList;
+      _a.innerHTML = value[dataList].replace(
+        /^./,
+        (c) => `<span class="upper">${c}</span>`
+      );
+      _li.append(_a);
+      _ul.append(_li);
+    }
+    app.innerHTML += `<ul>${_ul.innerHTML}</ul>`;
+
+    Array.from(document.querySelectorAll("a.list")).forEach((el) => {
+      let matches = {
+        strGlass: `g`,
+        strCategory: `c`,
+        strIngredient1: `i`,
+        strAlcoholic: `a`,
+      };
+      el.addEventListener("click", () => {
+        fetchUrlData(
+          `${BASE_API_URL}/filter.php?${matches[el.dataset.list]}=${
+            el.textContent
+          }`,
+          "filter-ingredient"
+        );
+
+        localStorage.setItem(
+          "currentFilteredSearch",
+          `Filter : ${
+            el.textContent.charAt(0).toUpperCase() + el.textContent.slice(1) ??
+            ""
+          }`
+        );
+      });
+    });
+  }
+}
+
 function writeCocktailsWithIngredientFilter(cocktails) {
   let htmlApp = document.querySelector(".application");
 
@@ -281,7 +323,6 @@ function writeCocktailsWithIngredientFilter(cocktails) {
   progressBar.max = Object.entries(cocktails).length;
   */
   let _ul = document.createElement("ul");
-  let carouselStart = "";
   let iterator = 0;
   let _div = document.createElement("div");
 
@@ -291,7 +332,6 @@ function writeCocktailsWithIngredientFilter(cocktails) {
     Object.entries(cocktails).length
   );
 
-  console.log("max len : " + Object.entries(cocktails).length);
   for (const [key, value] of Object.entries(cocktails)) {
     //  progressBar.value++;
     let _li = document.createElement("li");
@@ -356,20 +396,9 @@ function writeCocktailsWithIngredientFilter(cocktails) {
     el.addEventListener(
       "click",
       () => {
-        console.log(el.firstChild);
         document.getElementById("carouselImage").src = el.firstChild.src;
         document.querySelector(".cname").textContent = el.title;
         document.querySelector(".details").dataset.text = el.title;
-
-        // update carousel position
-
-        /*
-        fetchUrlData(
-          `${BASE_API_URL}/search.php?s=${el.dataset.text}`,
-          "cocktail"
-        );
-        */
-        //        restoreAppHtml();
       },
       true
     )
@@ -383,7 +412,6 @@ function writeCocktailsWithIngredientFilter(cocktails) {
    */
   document.querySelector(".details").addEventListener("click", (el) => {
     el.preventDefault();
-    console.log(el);
     if (el.target.dataset.text !== "") {
       restoreAppHtml();
       // Add the event listener
@@ -457,7 +485,7 @@ document.getElementById("submit").addEventListener("click", (el) => {
       ? `filter.php?i=${cocktail}`
       : `search.php?s=${cocktail}`;
   if (cocktail !== null && cocktail !== undefined) {
-    fetchUrlData(`${BASE_API_URL}\\${toBeFetched}`, "filter-ingredient");
+    fetchUrlData(`${BASE_API_URL}/${toBeFetched}`, "filter-ingredient");
 
     localStorage.setItem(
       "currentFilteredSearch",
@@ -481,31 +509,35 @@ document
       }
       ingredientSearch = document.getElementById("nameSearch").value;
     }
-    // if filter is on ingredients and a search by name is done
-    // we look for all drink with this ingredient
-    // we perform a name search for the other case
-    let matches = {
-      Ordinary_Drink: "c=Ordinary_Drink",
-      Cocktail: "c=Cocktail",
-      Cocktail_glass: "g=Cocktail_glass",
-      Champagne_flute: "g=Champagne_flute",
-      Ingredients: "i=" + ingredientSearch,
-      Alcoholic: "a=Alcoholic",
-      Non_Alcoholic: "a=Non_Alcoholic",
-    };
 
-    fetchUrlData(
-      "https://www.thecocktaildb.com/api/json/v1/1/filter.php?" +
-        matches[filtered],
-      "filter-ingredient"
-    );
+    if (filtered.includes("list")) {
+      fetchUrlData(`${BASE_API_URL}/list.php?${filtered}`, "filter-list");
+    } else {
+      // if filter is on ingredients and a search by name is done
+      // we look for all drink with this ingredient
+      // we perform a name search for the other case
+      let matches = {
+        Ordinary_Drink: "c=Ordinary_Drink",
+        Cocktail: "c=Cocktail",
+        Cocktail_glass: "g=Cocktail_glass",
+        Champagne_flute: "g=Champagne_flute",
+        Ingredients: "i=" + ingredientSearch,
+        Alcoholic: "a=Alcoholic",
+        Non_Alcoholic: "a=Non_Alcoholic",
+      };
 
-    localStorage.setItem(
-      "currentFilteredSearch",
-      `Filter : ${filtered.charAt(0).toLowerCase() + filtered.slice(1)}  ${
-        ingredientSearch ?? ""
-      }`
-    );
+      fetchUrlData(
+        `${BASE_API_URL}/filter.php?${matches[filtered]}`,
+        "filter-ingredient"
+      );
+
+      localStorage.setItem(
+        "currentFilteredSearch",
+        `Filter : ${filtered.charAt(0).toLowerCase() + filtered.slice(1)}  ${
+          ingredientSearch ?? ""
+        }`
+      );
+    }
   });
 
 [arrowLeft, arrowRight].forEach((el) => {
@@ -547,7 +579,6 @@ document
 
     let _aTargetLink = _liTargetLink.firstChild;
 
-    console.log(_aTargetLink.firstChild);
     document.querySelector(".cname").textContent = _aTargetLink.firstChild.alt;
     document.getElementById("carouselImage").src = _aTargetLink.firstChild.src;
     document.querySelector(".details").dataset.text =
@@ -556,10 +587,7 @@ document
     // add active element to this cocktail
     _liTargetLink.classList.add("active");
 
-    console.log(`li.items[data-id="${nextCarouselElement}"]`);
-
     localStorage.setItem("carouselCurrentElement", _liTargetLink.dataset.id);
-
     // get cocktail from storage based on it's key
     //    getLocalCocktailWithIngredient(elem.target.dataset.id);
   });
@@ -570,7 +598,7 @@ let randomize = document.getElementById("randomize");
 
 randomize.addEventListener("click", (elem) => {
   elem.preventDefault;
-  // initisalize base template first
+  // initialize base template first
   restoreAppHtml();
   // get cocktail from storage based on it's key
   getLocalCocktailWithIngredient(elem.target.dataset.id);
