@@ -4,14 +4,8 @@
 }
 
 /* Box Model Hack */
-html {
+* {
   box-sizing: border-box;
-}
-
-*,
-*::before,
-*::after {
-  box-sizing: inherit;
 }
 
 :root {
@@ -123,6 +117,7 @@ button {
   align-items: center;
   justify-content: space-between;
   width: 280px;
+  flex-shrink: 0;
 }
 
 .arrow > a {
@@ -387,6 +382,14 @@ progress {
   color: var(--c-textBackground);
 }
 
+.left,
+.right {
+  display: flex;
+  align-items: center;
+  flex-grow: 1;
+  width: 140px;
+}
+
 form {
   display: flex;
   width: 100%;
@@ -449,32 +452,4 @@ form {
 .filter_results {
   font-size: 3rem;
   color: var(--c-textBackground);
-}
-
-.blinky {
-  animation-duration: 2s;
-  animation-name: blink;
-  animation-iteration-count: infinite;
-  transition: none;
-}
-
-@keyframes blink {
-  0% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-
-ul li.items {
-  border-radius: 15px;
-  margin: 10px;
-}
-
-.items.active img {
-  box-shadow: -1px 2px 4px 5px var(--c-textBackground);
 }

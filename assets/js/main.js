@@ -38,8 +38,8 @@ function writeCocktailsList(cocktails) {
   let arrowLeft = document.querySelector("a.left");
   let arrowRight = document.querySelector("a.right");
 
-  arrowLeft.dataset["id"] = len;
-  arrowRight.dataset["id"] = 1;
+  arrowLeft.dataset["id"] = len; // last element in the array
+  arrowRight.dataset["id"] = 2; // next image after the first is the second
 
   if (numOfCocktailsLinks > 0) {
     // clear this before append new child
@@ -106,6 +106,7 @@ function writeCocktail(cocktail) {
 
     let aLink = document.createElement("a");
     aLink.id = "filterIngredient";
+    aLink.className = "blinky";
     aLink.href = "";
     aLink.title = `See all cocktails with ${localStorage.getItem(
       "currentIngredient"
@@ -277,16 +278,36 @@ if (localStorage.getItem("currentCocktail") !== "") {
 
 function writeCocktailsWithIngredientFilter(cocktails) {
   let htmlApp = document.querySelector(".application");
-  let progressBar = document.querySelector("progress");
-  let _ul = document.createElement("ul");
-  progressBar.hidden = false;
+
+  // TODO : put it later, was taken off from html for the moment
+  // ! Html is not present in the index.html file
+  // ? is it necessary, event seems to go too quickly to be really noticed with a progressbar
+  /* let progressBar = document.querySelector("progress");
+   progressBar.hidden = false;
   progressBar.max = Object.entries(cocktails).length;
+  */
+  let _ul = document.createElement("ul");
   let carouselStart = "";
   let iterator = 0;
   let _div = document.createElement("div");
 
+  // set first element of the carousel in localStorage
+  localStorage.setItem(
+    "carouselMaxItemValue",
+    Object.entries(cocktails).length
+  );
+
+  console.log("max len : " + Object.entries(cocktails).length);
   for (const [key, value] of Object.entries(cocktails)) {
+    //  progressBar.value++;
+    let _li = document.createElement("li");
+
     if (iterator === 0) {
+      _li.className = "items active";
+
+      // set first element of the carousel in localStorage
+      localStorage.setItem("carouselCurrentElement", 1);
+
       let _p = document.createElement("p");
       let _span1 = document.createElement("span");
 
@@ -310,13 +331,12 @@ function writeCocktailsWithIngredientFilter(cocktails) {
       _p.appendChild(_a);
       _div.appendChild(_p);
       _div.appendChild(_img);
+    } else {
+      _li.className = "items";
     }
-    progressBar.value++;
-    let _li = document.createElement("li");
     let _aLink = document.createElement("a");
     let _img = document.createElement("img");
 
-    _li.className = "items";
     _li.dataset.id = ++iterator;
     _aLink.href = "#";
     _aLink.dataset.id = value.idDrink;
@@ -326,6 +346,7 @@ function writeCocktailsWithIngredientFilter(cocktails) {
 
     _img.src = value.strDrinkThumb;
     _img.alt = value.strDrink;
+    _img.dataset.id = iterator;
 
     _aLink.appendChild(_img);
     _li.appendChild(_aLink);
@@ -334,8 +355,8 @@ function writeCocktailsWithIngredientFilter(cocktails) {
 
   htmlApp.innerHTML = `${_div.outerHTML}<ul class="cocktail-selection">${_ul.innerHTML}</ul>`;
 
-  progressBar.ariaHidden = true;
-  progressBar.hidden = true;
+  //  progressBar.ariaHidden = true;
+  //  progressBar.hidden = true;
 
   Array.from(document.querySelectorAll("a.filter")).forEach((el) =>
     el.addEventListener(
@@ -345,6 +366,9 @@ function writeCocktailsWithIngredientFilter(cocktails) {
         document.getElementById("carouselImage").src = el.firstChild.src;
         document.querySelector(".cname").textContent = el.title;
         document.querySelector(".details").dataset.text = el.title;
+
+        // update carousel position
+
         /*
         fetchUrlData(
           `${BASE_API_URL}/search.php?s=${el.dataset.text}`,
@@ -497,9 +521,8 @@ let arrowRight = document.querySelector("a.right");
 [arrowLeft, arrowRight].forEach((el) => {
   el.addEventListener("click", (elem) => {
     elem.preventDefault;
-    console.log("click for ");
-    // get cocktail from storage based on it's key
-    getLocalCocktailWithIngredient(elem.target.dataset.id);
+
+    doCarousel(elem.target);
   });
 });
 
@@ -521,4 +544,55 @@ randomize.addEventListener("click", (elem) => {
  */
 function clearHtmlElement(el) {
   while (el.hasChildNodes()) el.removeChild(el.firstChild);
+}
+
+function doCarousel(el) {
+  // deal with next element
+  let carouselCurrentElement = Number(
+    localStorage.getItem("carouselCurrentElement")
+  );
+  let carouselMaxItemValue = Number(
+    localStorage.getItem("carouselMaxItemValue")
+  );
+  //    let nextCarouselElement = Number(carouselCurrentElement) + 1;
+  let nextCarouselElement = Number(el.dataset.id);
+  let prevCarouselElement = 0;
+  if (el.className === "right") {
+    arrowLeft.dataset.id = carouselCurrentElement;
+    // becareful to not go more than the max value, we restart at 0 instead
+    el.dataset.id =
+      nextCarouselElement >= carouselMaxItemValue ? 1 : nextCarouselElement + 1;
+  } else if (el.className === "left") {
+    arrowRight.dataset.id = carouselCurrentElement;
+    nextCarouselElement = el.dataset.id;
+    // don't go down less to 1, go to the last instead
+    el.dataset.id =
+      el.dataset.id <= 1 ? carouselMaxItemValue : el.dataset.id - 1;
+  }
+
+  let _liTargetLink =
+    document.querySelector(`li.items[data-id="${nextCarouselElement}"]`) ||
+    document.querySelector(`li.items[data-id="${el.dataset.id}"]`);
+
+  // remove active visibility to current cocktail
+  document
+    .querySelector(`li.items[data-id="${carouselCurrentElement}"]`)
+    .classList.remove("active");
+
+  let _aTargetLink = _liTargetLink.firstChild;
+
+  console.log(_aTargetLink.firstChild);
+  document.querySelector(".cname").textContent = _aTargetLink.firstChild.alt;
+  document.getElementById("carouselImage").src = _aTargetLink.firstChild.src;
+  document.querySelector(".details").dataset.text = _aTargetLink.firstChild.alt;
+
+  // add active element to this cocktail
+  _liTargetLink.classList.add("active");
+
+  console.log(`li.items[data-id="${nextCarouselElement}"]`);
+
+  localStorage.setItem("carouselCurrentElement", _liTargetLink.dataset.id);
+
+  // get cocktail from storage based on it's key
+  //    getLocalCocktailWithIngredient(elem.target.dataset.id);
 }
