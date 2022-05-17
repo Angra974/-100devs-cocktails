@@ -1,3 +1,5 @@
+"use strict";
+
 // let the user see the last cocktail he saw
 let currentCocktail = localStorage.getItem("currentCocktail");
 let currentIngredient = localStorage.getItem("currentIngredient");
@@ -24,6 +26,8 @@ const arrowRight = document.querySelector("a.right");
  * @return void
  */
 function writeCocktails(cocktails) {
+  [(arrowLeft, arrowRight)].forEach((el) => (el.style.opacity = "0"));
+
   // Don't show filter everywhere, except on filter page after a search
   localStorage.setItem("currentFilteredSearch", "");
 
@@ -33,7 +37,6 @@ function writeCocktails(cocktails) {
   Object.entries(cocktails).length === 1
     ? writeCocktail(cocktails[0])
     : writeCocktailsList(cocktails);
-  //  cocktails.forEach((el) => writeCocktail(el));
 }
 
 function writeCocktailsList(cocktails) {
@@ -51,6 +54,7 @@ function writeCocktailsList(cocktails) {
   arrowLeft.dataset["id"] = len; // last element in the array
   arrowRight.dataset["id"] = 2; // next image after the first is the second
 
+  // get a cocktail randomly
   let random = Math.floor(numOfCocktailsLinks * Math.random());
   writeCocktail(cocktails[random]);
 }
@@ -69,7 +73,7 @@ function writeCocktail(cocktail) {
 
   const cocktailIngredients = document.querySelector(".cocktail-ingredients");
   let cocktailTags = document.querySelector(".cocktail-tags");
-  let cocktailIngredientsList = document.getElementById("ingredientDataList");
+
   // change image
   cocktailImage.innerHTML = `<img src="${cocktail.strDrinkThumb}" alt="${cocktail.strDrink}" />`;
   cocktailName.textContent = `${cocktail.strDrink}`;
@@ -113,7 +117,7 @@ function writeCocktail(cocktail) {
         `${BASE_API_URL}/filter.php?i=${localStorage.getItem(
           "currentIngredient"
         )}`,
-        "filter-ingredient"
+        writeCocktailsWithIngredientFilter
       );
     });
 
@@ -121,6 +125,10 @@ function writeCocktail(cocktail) {
   } else {
     cocktailDescription.textContent = cocktail.strInstructions;
   }
+
+  /**
+   *  for each ingredient, add a search by this ingredient on click
+   */
   getCocktailIngredients(cocktail).map((x) => {
     const aLink = document.createElement("a");
     aLink.className = "";
@@ -130,7 +138,7 @@ function writeCocktail(cocktail) {
     // Add the event listener
     aLink.addEventListener("click", (el) => {
       el.preventDefault();
-      fetchUrlData(`${BASE_API_URL}/filter.php?i=${x}`, "ingredient");
+      fetchUrlData(`${BASE_API_URL}/filter.php?i=${x}`, writeCocktails);
       localStorage.setItem("currentIngredient", x);
     });
 
@@ -159,30 +167,12 @@ function writeCocktail(cocktail) {
   Array.from(document.querySelectorAll(".tags")).forEach((el) => {
     el.preventDefault();
 
-    // TODO : Add a databse engine and create a tag databse for making search available by tags
-    // * Allow research by multiple tags possible
-    /*
-    el.addEventListener("click", (el) => {
-      el.preventDefault();
-
-      if (el.target.dataset.text !== "") {
-        restoreAppHtml();
-        // Add the event listener
-        let url = `${BASE_API_URL}/search.php?s=${el.target.dataset.text}`;
-        fetchUrlData(url, "cocktail");
-      }
-    });
-    */
+    // TODO : Add a database engine and create a tag databse for making search available by tags
   });
-
-  //  cocktailIngredientsList.innerHTML = localIngredientsListOptions || "";
-
-  /* default behavior */
-  let ingredientListLinks = document.querySelectorAll("a.ingredientList");
 }
 
 /**
- *
+
  * @param {Object cocktail} cocktail a cocktail object to parse, create ingredient datalist in localstorage
  * @returns array : list of ingredients in a cocktails
  */
@@ -230,24 +220,16 @@ function getCocktailIngredients(cocktail) {
  */
 function fetchUrlData(
   url = `${BASE_API_URL}/search.php?s=margarita`,
-  type = "cocktail"
+  callback
 ) {
   fetch(url)
     .then((response) => response.json())
     .then((data) => {
       if (data.drinks !== undefined && data.drinks !== null) {
-        if (type === "cocktail" || type === "ingredient") {
-          [arrowLeft, arrowRight].forEach((el) => (el.style.opacity = "0"));
-          writeCocktails(data.drinks);
-        } else if (type === "filter-ingredient") {
-          writeCocktailsWithIngredientFilter(data.drinks);
-          [arrowLeft, arrowRight].forEach((el) => (el.style.opacity = "1"));
-        } else if (type === "filter-list") {
-          writeFilters(data.drinks);
-        }
+        callback(data.drinks);
       }
     })
-    .catch((error) => {
+    .catch(() => {
       // if a search is present, error will be certainly here
       if (localStorage.getItem("currentFilteredSearch")) {
         document.querySelector(".filter_results").textContent =
@@ -260,7 +242,7 @@ function fetchUrlData(
 
 // get a random data only when page is loaded and not each time application link is activated
 if (localStorage.getItem("currentCocktail") !== "") {
-  fetchUrlData(randomUrl, "cocktail");
+  fetchUrlData(randomUrl, writeCocktails);
 }
 
 function writeFilters(data) {
@@ -297,7 +279,7 @@ function writeFilters(data) {
           `${BASE_API_URL}/filter.php?${matches[el.dataset.list]}=${
             el.textContent
           }`,
-          "filter-ingredient"
+          writeCocktailsWithIngredientFilter
         );
 
         localStorage.setItem(
@@ -312,7 +294,9 @@ function writeFilters(data) {
   }
 }
 
-function writeCocktailsWithIngredientFilter(cocktails) {
+function writeCocktailsWithIngredientFilter(cocktails = []) {
+  [arrowLeft, arrowRight].forEach((el) => (el.style.opacity = "1"));
+
   let htmlApp = document.querySelector(".application");
 
   // TODO : put it later, was taken off from html for the moment
@@ -389,16 +373,16 @@ function writeCocktailsWithIngredientFilter(cocktails) {
 
   htmlApp.innerHTML = `${_div.outerHTML}<ul class="cocktail-selection">${_ul.innerHTML}</ul>`;
 
-  //  progressBar.ariaHidden = true;
-  //  progressBar.hidden = true;
-
   Array.from(document.querySelectorAll("a.filter")).forEach((el) =>
     el.addEventListener(
       "click",
       () => {
+        document.querySelector('li.active').classList.toggle('active');
+
         document.getElementById("carouselImage").src = el.firstChild.src;
         document.querySelector(".cname").textContent = el.title;
         document.querySelector(".details").dataset.text = el.title;
+        el.parentNode.classList.toggle("active");
       },
       true
     )
@@ -416,7 +400,7 @@ function writeCocktailsWithIngredientFilter(cocktails) {
       restoreAppHtml();
       // Add the event listener
       let url = `${BASE_API_URL}/search.php?s=${el.target.dataset.text}`;
-      fetchUrlData(url, "cocktail");
+      fetchUrlData(url, writeCocktails);
     }
   });
 
@@ -433,7 +417,7 @@ function getLocalCocktailWithIngredient(cocktail_id) {
     Object.entries(localStorage.getItem("cocktailsWithIngredient"))[cocktail_id]
   );
   */
-  fetchUrlData(randomUrl, "cocktail");
+  fetchUrlData(randomUrl, writeCocktails);
 }
 
 function restoreAppHtml() {
@@ -468,7 +452,10 @@ document.querySelector(".alcohol-filter").addEventListener("click", (el) => {
     let filter = el.target.textContent.includes(" ")
       ? "Non_Alcoholic"
       : "Alcoholic";
-    fetchUrlData(`${BASE_API_URL}/filter.php?a=${filter}`, "filter-ingredient");
+    fetchUrlData(
+      `${BASE_API_URL}/filter.php?a=${filter}`,
+      writeCocktailsWithIngredientFilter
+    );
   }
 });
 
@@ -485,7 +472,10 @@ document.getElementById("submit").addEventListener("click", (el) => {
       ? `filter.php?i=${cocktail}`
       : `search.php?s=${cocktail}`;
   if (cocktail !== null && cocktail !== undefined) {
-    fetchUrlData(`${BASE_API_URL}/${toBeFetched}`, "filter-ingredient");
+    fetchUrlData(
+      `${BASE_API_URL}/${toBeFetched}`,
+      writeCocktailsWithIngredientFilter
+    );
 
     localStorage.setItem(
       "currentFilteredSearch",
@@ -511,7 +501,7 @@ document
     }
 
     if (filtered.includes("list")) {
-      fetchUrlData(`${BASE_API_URL}/list.php?${filtered}`, "filter-list");
+      fetchUrlData(`${BASE_API_URL}/list.php?${filtered}`, writeFilters);
     } else {
       // if filter is on ingredients and a search by name is done
       // we look for all drink with this ingredient
@@ -528,7 +518,7 @@ document
 
       fetchUrlData(
         `${BASE_API_URL}/filter.php?${matches[filtered]}`,
-        "filter-ingredient"
+        writeCocktailsWithIngredientFilter
       );
 
       localStorage.setItem(
